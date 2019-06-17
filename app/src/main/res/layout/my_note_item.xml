@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/ConstrintLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/cardViewPadding">
+
+        <TextView
+            android:id="@+id/date"
+            style="@style/date_style"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dummyDate"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/month"
+            style="@style/month_style"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dummyMonth"
+            app:layout_constraintLeft_toRightOf="@id/date"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="@dimen/textMargin"
+            />
+
+        <TextView
+            android:id="@+id/day"
+            style="@style/day_style"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text="@string/dummyDay"
+            app:layout_constraintLeft_toRightOf="@id/month"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="@dimen/textMargin"/>
+        <TextView
+            android:id="@+id/time"
+            style="@style/day_style"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text="@string/dummyTime"
+            app:layout_constraintLeft_toRightOf="@id/day"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="@dimen/textMargin"/>
+
+        <TextView
+            android:id="@+id/year"
+            style="@style/year_style"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/dummyYear"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/title"
+            style="@style/title_style"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="this is a sample title script that wiilllook "
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/date"
+            android:maxWidth="@dimen/maxWidthTitle"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            />
+
+        <TextView
+            android:id="@+id/content"
+            style="@style/content_style"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:text="@string/dummyContent"
+            app:layout_constraintEnd_toStartOf="@+id/thumbnail"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/thumbnail"
+            android:layout_width="@dimen/thumbnailwidth"
+            android:layout_height="@dimen/thumbnailwidth"
+            android:src="@mipmap/notestick_icon_foreground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/content"
+            app:layout_constraintTop_toBottomOf="@id/year"
+            android:layout_marginStart="16dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+</androidx.cardview.widget.CardView>

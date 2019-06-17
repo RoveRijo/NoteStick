@@ -1,0 +1,83 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="date_new_note_style" parent="date_style">
+        <item name="android:textSize">50sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="month_new_note_style" parent="month_style">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="year_new_note_style" parent="year_style">
+        <item name="android:textSize">17sp</item>
+    </style>
+
+    <style name="day_new_note_style" parent="day_style">
+
+    </style>
+
+    <style name="title_new_note_style" parent="title_style">
+
+    </style>
+
+    <style name="content_new_note_style" parent="content_style">
+        <item name="android:hint">@string/New_note_content_hint</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textSize">18sp</item>
+
+    </style>
+
+    <style name="month_style" parent="AppTheme">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/DarkText</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="year_style" parent="AppTheme">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/FadeText</item>
+    </style>
+
+    <style name="day_style" parent="AppTheme">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/FadeText</item>
+    </style>
+
+    <style name="title_style" parent="AppTheme">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+
+    <style name="content_style" parent="AppTheme">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/contentColor</item>
+    </style>
+
+    <style name="date_style" parent="AppTheme">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+
+
+
+</resources>
