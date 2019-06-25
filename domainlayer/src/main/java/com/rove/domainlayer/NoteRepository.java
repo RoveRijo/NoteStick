@@ -9,6 +9,7 @@ import com.rove.datalayer.Data.*;
 import com.rove.datalayer.Data.Entity_Note;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Room;
@@ -42,16 +43,22 @@ public class NoteRepository {
         new Task_EditNote(databaseInteractor).execute(note);
     }
 
-    public boolean isExisting(Entity_Note note) {
-        if (databaseInteractor.getDao().getNoteById(note.NoteId).getValue() != null)
+    public boolean isExisting(Entity_Note note) throws ExecutionException, InterruptedException {
+        if (getNoteByID(note.getNoteId())!=null)
             return true;
         else
             return false;
     }
 
-    public LiveData<Entity_Note> getNoteByID(int noteId) {
-        return databaseInteractor.getDao().getNoteById(noteId);
+    public Entity_Note getNoteByID(int noteId) throws ExecutionException, InterruptedException {
+        return new Task_getNotById(databaseInteractor).execute(noteId).get();
     }
+
+    public LiveData<Entity_Note> getNoteByIDLiveData(int noteId){
+        return databaseInteractor.getDao().getNoteByIDLiveData(noteId);
+    }
+
+
 
     private static class Task_SaveNote extends AsyncTask<Entity_Note, Void, Void> {
         public Task_SaveNote(DatabaseInteractor databaseInteractor) {
@@ -79,6 +86,19 @@ public class NoteRepository {
             databaseInteractor.getDao().updateNote(entity_notes[0]);
             return null;
         }
+    }
+    private static class Task_getNotById extends AsyncTask<Integer,Void,Entity_Note>{
+
+        private DatabaseInteractor databaseInteractor;
+        public Task_getNotById(DatabaseInteractor databaseInteractor){
+            this.databaseInteractor = databaseInteractor;
+        }
+        @Override
+        protected Entity_Note doInBackground(Integer... id) {
+            return databaseInteractor.getDao().getNoteById(id[0]);
+        }
+
+
     }
 
 

@@ -94,7 +94,6 @@
             android:id="@+id/thumbnail"
             android:layout_width="@dimen/thumbnailwidth"
             android:layout_height="@dimen/thumbnailwidth"
-            android:src="@mipmap/notestick_icon_foreground"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/content"

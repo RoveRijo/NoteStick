@@ -3,6 +3,7 @@ package com.rove.notestick.Util;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -76,10 +77,12 @@ public class StringImageJsonViewModem implements JsonViewModem {
             ViewGroup.LayoutParams params;
             switch (viewtype) {
                 case EDITEXT_TYPE:
-                    EditText editText = new EditText(context, null, R.style.content_new_note_style);
+                    EditText editText = new EditText(new ContextThemeWrapper(context,R.style.content_new_note_style));
                     params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT
                             , ViewGroup.LayoutParams.WRAP_CONTENT);
                     editText.setLayoutParams(params);
+                    editText.setText(contentView.content);
+                    editText.setEnabled(false);
                     textImageLayout.addView(editText);
                     break;
                 case IMAGEVIEW_TYPE:
@@ -96,7 +99,7 @@ public class StringImageJsonViewModem implements JsonViewModem {
                     imageSaver.setFileName(contentView.getContent());
                     Bitmap image = imageSaver.load();
                     imageview.setImageBitmap(image);
-
+                    textImageLayout.addView(imageview);
                     break;
                 default:
                     break;

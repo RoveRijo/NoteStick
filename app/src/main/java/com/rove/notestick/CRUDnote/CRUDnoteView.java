@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 public class CRUDnoteView extends AppCompatActivity {
 
@@ -38,9 +39,17 @@ public class CRUDnoteView extends AppCompatActivity {
     private Entity_Note note;
     private FloatingActionButton addStickerbtn,save;
     private static final int IMAGE_REQ_CODE = 1;
+    public static final int CREATE_NOTE_MODE = 1;
+    public static final int VIEW_NOTE_MODE = 2;
+    public static final String MODE = "mode";
+    private int openMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        //TODO: open note editor according to mode  19-06-2019
+        //TODO: read Permission issue  23-06-2019
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crud_note);
 
@@ -58,7 +67,20 @@ public class CRUDnoteView extends AppCompatActivity {
         save = findViewById(R.id.save);
 
         mViewModel = ViewModelProviders.of(this).get(CRUDnoteViewModel.class);
-        note = getIntent().getParcelableExtra(MyNotesViewModel.NEW_NOTE);
+
+        openMode = getIntent().getIntExtra(MODE,-1);
+        switch (openMode){
+            case CREATE_NOTE_MODE:
+                note = getIntent().getParcelableExtra(MyNotesViewModel.NEW_NOTE);
+                break;
+            case VIEW_NOTE_MODE:
+                note = getIntent().getParcelableExtra(MyNotesViewModel.VIEW_NOTE);
+                break;
+            default:
+                finish();
+                break;
+        }
+
         mViewModel.setCurrentNote(new MutableLiveData<>(note));
         mViewModel.getCurrentNote().observe(this, new Observer<Entity_Note>() {
             @Override
@@ -70,6 +92,11 @@ public class CRUDnoteView extends AppCompatActivity {
                 Year.setText(dateParser.getYear());
                 Time.setText(dateParser.getTime());
                 Title.setText(note.getTitle());
+                try {
+                    mViewModel.getContentOf(note);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
 
 
             }
@@ -87,7 +114,13 @@ public class CRUDnoteView extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 note.setTitle(Title.getText().toString());
-                mViewModel.saveCurrentNote(note);
+                try {
+                    mViewModel.saveCurrentNote(note);
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
 

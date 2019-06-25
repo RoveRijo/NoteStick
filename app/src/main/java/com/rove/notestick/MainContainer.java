@@ -1,8 +1,8 @@
 package com.rove.notestick;
 
+import com.facebook.stetho.Stetho;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.rove.notestick.Calendar.CalendarView;
 import com.rove.notestick.More.MoreView;
 import com.rove.notestick.MyNotes.MyNotesView;
@@ -16,13 +16,9 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-
-import android.widget.TextView;
 
 public class MainContainer extends AppCompatActivity {
 
@@ -49,6 +45,11 @@ public class MainContainer extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_container);
 
+        //remove on release
+
+        Stetho.initializeWithDefaults(this);
+        //remove on release
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
@@ -72,7 +73,7 @@ public class MainContainer extends AppCompatActivity {
                 int fragpos = mViewPager.getCurrentItem();
                 switch (fragpos){
                     case MYNOTES_INDEX:
-                        ((MyNotesView)mSectionsPagerAdapter.getItem(fragpos)).saveNote();
+                        ((MyNotesView)mSectionsPagerAdapter.getItem(fragpos)).showNoteEditorOnCreateMode();
                         break;
                 }
 

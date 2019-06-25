@@ -4,6 +4,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -24,10 +25,12 @@ import com.rove.datalayer.Data.Entity_Note;
 import com.rove.notestick.CRUDnote.CRUDnoteView;
 import com.rove.notestick.R;
 import com.rove.notestick.Util.DateParser;
+import com.rove.notestick.Util.ImageSaver;
 import com.rove.notestick.Util.NoteContentParsor;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MyNotesView extends Fragment {
 
@@ -54,10 +57,9 @@ public class MyNotesView extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mViewModel = ViewModelProviders.of(this).get(MyNotesViewModel.class);
-        // TODO: Use the ViewModel
         MynotesRecyclerView = getActivity().findViewById(R.id.recyclerview);
         MynotesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        final recyclerViewAdapter recyclerviewAdapter = new recyclerViewAdapter();
+        final recyclerViewAdapter recyclerviewAdapter = new recyclerViewAdapter(this);
         MynotesRecyclerView.setAdapter(recyclerviewAdapter);
         mViewModel.getNotesByDate().observe(this, new Observer<List<Entity_Note>>() {
             @Override
@@ -70,25 +72,29 @@ public class MyNotesView extends Fragment {
 
 
     }
-//    public MyNotesViewModel getmViewModel() {
-//        return mViewModel;
-    //}
-    public void saveNote(){
+
+    public void showNoteEditorOnCreateMode(){
         Entity_Note note = new Entity_Note();
         note.setDate(new Date());
-//        note.setTitle("This is My Sample Title");
-//        note.setContent("This is My Sample content which is more" +
-//                "better when i wrap with somthing in the coming future.So we need to change " +
-//                "that.");
-//        note.setTitle("This is My Sample Title");
-//        mViewModel.saveNote(note);
-
         Intent newnote = new Intent(getContext(), CRUDnoteView.class);
+        newnote.putExtra(CRUDnoteView.MODE,CRUDnoteView.CREATE_NOTE_MODE);
         newnote.putExtra(MyNotesViewModel.NEW_NOTE,note);
         startActivity(newnote);
 
     }
 
+    public void showNoteEditorOnViewNoteMode(int noteId) throws ExecutionException, InterruptedException {
+        Entity_Note note = mViewModel.getNotWithId(noteId);
+        Intent newnote = new Intent(getContext(), CRUDnoteView.class);
+        newnote.putExtra(CRUDnoteView.MODE,CRUDnoteView.VIEW_NOTE_MODE);
+        newnote.putExtra(MyNotesViewModel.VIEW_NOTE,note);
+        startActivity(newnote);
+
+    }
+
+    public MyNotesViewModel getViewModel() {
+        return mViewModel;
+    }
 }
 
 
@@ -96,6 +102,7 @@ public class MyNotesView extends Fragment {
 
 class recyclerViewAdapter extends ListAdapter<Entity_Note, recyclerViewAdapter.NotesViewHolder> {
 
+    private MyNotesView myNotesView;
     private static DiffUtil.ItemCallback<Entity_Note> DIFF_CALL_BACK = new DiffUtil.ItemCallback<Entity_Note>() {
         @Override
         public boolean areItemsTheSame(@NonNull Entity_Note oldItem, @NonNull Entity_Note newItem) {
@@ -110,8 +117,9 @@ class recyclerViewAdapter extends ListAdapter<Entity_Note, recyclerViewAdapter.N
         }
     };
 
-    protected recyclerViewAdapter() {
+    protected recyclerViewAdapter(MyNotesView myNotesView) {
         super(DIFF_CALL_BACK);
+        this.myNotesView = myNotesView;
     }
 
     @NonNull
@@ -123,7 +131,7 @@ class recyclerViewAdapter extends ListAdapter<Entity_Note, recyclerViewAdapter.N
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NotesViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull NotesViewHolder holder, final int position) {
         DateParser dateParser = new DateParser(getItem(position).getDate());
         holder.Date.setText(dateParser.getDate());
         holder.Month.setText(dateParser.getMonth());
@@ -133,6 +141,23 @@ class recyclerViewAdapter extends ListAdapter<Entity_Note, recyclerViewAdapter.N
         holder.Title.setText(getItem(position).getTitle());
         NoteContentParsor noteContentParsor = new NoteContentParsor(getItem(position).getContent());
         holder.Content.setText(noteContentParsor.getContentPreview());
+        if(noteContentParsor.getImageSrcs().size()>0){
+            holder.Thumbnail.setImageBitmap(myNotesView.getViewModel().getThumbnail(getItem(position).
+                    getImgUrl()));
+        }
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    myNotesView.showNoteEditorOnViewNoteMode(getItem(position).getNoteId());
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
 
     }
 
@@ -140,9 +165,11 @@ class recyclerViewAdapter extends ListAdapter<Entity_Note, recyclerViewAdapter.N
     class NotesViewHolder extends RecyclerView.ViewHolder {
         private TextView Date, Month, Day, Year, Time, Title, Content;
         private ImageView Thumbnail;
+        private View itemView;
 
         public NotesViewHolder(@NonNull View itemView) {
             super(itemView);
+            this.itemView = itemView;
             Date = itemView.findViewById(R.id.date);
             Day = itemView.findViewById(R.id.day);
             Month = itemView.findViewById(R.id.month);

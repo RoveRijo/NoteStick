@@ -32,8 +32,13 @@ public interface mDao {
 //    @Query("SELECT * fROM Entity_Note")
 //    Cursor getAllNotesAsCursor();
 
+
+
     @Query("SELECT * fROM Entity_Note WHERE NoteId = :id")
-    LiveData<Entity_Note> getNoteById(int id);
+    Entity_Note getNoteById(int id);
+
+    @Query("SELECT * fROM Entity_Note WHERE NoteId = :id")
+    LiveData<Entity_Note> getNoteByIDLiveData(int id);
 
     @Query("SELECT * fROM Entity_Note WHERE Date = :date")
     LiveData<List<Entity_Note>> getNoteByDate(Date date);

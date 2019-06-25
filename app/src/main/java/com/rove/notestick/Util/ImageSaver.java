@@ -15,7 +15,7 @@ import java.io.IOException;
 import androidx.annotation.NonNull;
 
 public class ImageSaver {
-    private static int INITILIZER_BEGIN=0,INITIALIZER_FINISHED_SAVING=3,INITIALIZER_FINISHED_LOADING=4;
+    private static int INITILIZER_BEGIN=0,INITIALIZER_FINISHED_SAVING=3,INITIALIZER_FINISHED_LOADING=3;
     private String directoryName = "images";
     private String fileName = "image.png";
     private Context context;
@@ -69,7 +69,9 @@ public class ImageSaver {
             Log.e("ImageSaver","Error creating directory " + directory);
             throw new RuntimeException("Error creating directory " + directory);
         }
-
+        if(fileName==null){
+            return null;
+        }
         return new File(directory, fileName);
     }
 
@@ -91,8 +93,12 @@ public class ImageSaver {
 
     public Bitmap load() throws FileNotFoundException{
         if(initializestat>=INITIALIZER_FINISHED_LOADING){
-        FileInputStream inputStream = null;
-            inputStream = new FileInputStream(createFile());
+        FileInputStream inputStream ;
+            File file = createFile();
+            if(file==null){
+                return null;
+            }
+            inputStream = new FileInputStream(file);
             return BitmapFactory.decodeStream(inputStream);
 
         }
