@@ -96,7 +96,8 @@ public class StringImageJsonViewModem implements JsonViewModem {
                                 , contentView.getViewSize().Height);
                     }
                     imageview.setLayoutParams(params);
-                    imageSaver.setFileName(contentView.getContent());
+                    //imageSaver.setFileName(contentView.getContent());
+                    imageview.setmImageURI(contentView.getContent());
                     Bitmap image = imageSaver.load();
                     imageview.setImageBitmap(image);
                     textImageLayout.addView(imageview);

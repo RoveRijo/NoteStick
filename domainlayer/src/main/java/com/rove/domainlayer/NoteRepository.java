@@ -57,6 +57,9 @@ public class NoteRepository {
     public LiveData<Entity_Note> getNoteByIDLiveData(int noteId){
         return databaseInteractor.getDao().getNoteByIDLiveData(noteId);
     }
+    public void deleteNote(Entity_Note note){
+      new Task_deleteNote(databaseInteractor).execute(note);
+    }
 
 
 
@@ -99,6 +102,19 @@ public class NoteRepository {
         }
 
 
+    }
+    private static class Task_deleteNote extends AsyncTask<Entity_Note,Void,Void>{
+        private DatabaseInteractor databaseInteractor;
+
+        public Task_deleteNote(DatabaseInteractor databaseInteractor) {
+            this.databaseInteractor = databaseInteractor;
+        }
+
+        @Override
+        protected Void doInBackground(Entity_Note... notes) {
+            databaseInteractor.getDao().deleteNote(notes[0]);
+            return null;
+        }
     }
 
 

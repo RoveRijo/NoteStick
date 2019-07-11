@@ -145,6 +145,9 @@ class recyclerViewAdapter extends ListAdapter<Entity_Note, recyclerViewAdapter.N
             holder.Thumbnail.setImageBitmap(myNotesView.getViewModel().getThumbnail(getItem(position).
                     getImgUrl()));
         }
+        else{
+            holder.Thumbnail.setImageBitmap(null);
+        }
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

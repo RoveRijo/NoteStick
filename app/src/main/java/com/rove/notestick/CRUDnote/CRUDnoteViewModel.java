@@ -33,6 +33,7 @@ public class CRUDnoteViewModel extends AndroidViewModel {
     private LiveData<Entity_Note> currentNote;
     private ImageSaver imageSaver;
     private Application mApplication;
+    //private boolean save_state = true;
 
     //private StringImageLayout contentLayout;
 
@@ -108,6 +109,10 @@ public class CRUDnoteViewModel extends AndroidViewModel {
 //        editText.setTextColor(Color.BLACK);
         contentLayout.addView(editText);
     }
+    public void replaceImageOnScrollView(String URI,ImageViewWithSrc imageview) throws FileNotFoundException {
+        imageview.setmImageURI(URI);
+        imageview.setBackgroundColor(Color.BLUE);
+    }
 
     public Application getApplication() {
         return mApplication;
@@ -127,4 +132,15 @@ public class CRUDnoteViewModel extends AndroidViewModel {
         jsonViewModem.populateViewfromJson(note.getContent());
     }
 
+    public void deleteNoteWithId(Entity_Note note) {
+        noteRepository.deleteNote(note);
+    }
+
+//    public void setSave_state(boolean save_state) {
+//        this.save_state = save_state;
+//    }
+//
+//    public boolean isSaved() {
+//        return save_state;
+//    }
 }

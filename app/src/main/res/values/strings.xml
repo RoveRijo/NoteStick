@@ -6,8 +6,6 @@
     <string name="tab_text_3">More</string>
     <string name="action_settings">Settings</string>
     <string name="section_format">Hello World from section: %1$d</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="dummyDate">17</string>
     <string name="dummyMonth">May</string>
@@ -20,4 +18,13 @@
     <string name="TitleHint">Title</string>
     <string name="New_note_content_hint">Write here...</string>
     <string name="Image_Directory_Name">NoteStick</string>
+    <string name="save_munu_title">Save Note</string>
+    <string name="save_munu_title_mini">Save Note</string>
+    <string name="Save_snackbar_msg">Note saved..</string>
+    <string name="delete_image_title">Remove</string>
+    <string name="change_image_title">Change</string>
+    <string name="delete_confirm_title">Delete?</string>
+    <string name="delete_confirm_description">Do you want to delete this note permanently?</string>
+    <string name="btn_yes">Yes</string>
+    <string name="btn_no">No</string>
 </resources>
