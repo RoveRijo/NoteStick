@@ -12,4 +12,5 @@
     <dimen name="maxWidthContent">200dp</dimen>
     <dimen name="NormalTopMargin">75dp</dimen>
     <dimen name="TitleVerticalMargin">20dp</dimen>
+    <dimen name="ContentTopMargin">250dp</dimen>
 </resources>

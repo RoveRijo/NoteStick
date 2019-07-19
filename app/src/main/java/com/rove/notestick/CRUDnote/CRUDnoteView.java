@@ -27,11 +27,14 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.rove.datalayer.Data.Entity_Note;
@@ -54,8 +57,9 @@ public class CRUDnoteView extends AppCompatActivity {
     private TextView Date, Day, Month, Year, Time;
     private EditText Title;
     private TextImageLayout contentLayout;
+    private boolean editMode = false;
     private Entity_Note note;
-    private FloatingActionButton addStickerbtn, save;
+    private FloatingActionButton addStickerbtn;
     private CoordinatorLayout rootLayout;
     private static final int IMAGE_REQ_CODE = 1;
     private static final int IMAGE_REPLACE_REQ_CODE = 3;
@@ -76,6 +80,10 @@ public class CRUDnoteView extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         rootLayout = findViewById(R.id.rootlayout);
+        AppBarLayout appBarLayout = findViewById(R.id.appbar);
+        CollapsingToolbarLayout collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
+
+        modifyCollapsingToolbarTitle(collapsingToolbarLayout,appBarLayout, (String) getTitle());
 
         Date = findViewById(R.id.date);
         Day = findViewById(R.id.day);
@@ -85,7 +93,6 @@ public class CRUDnoteView extends AppCompatActivity {
         Title = findViewById(R.id.title);
         addStickerbtn = findViewById(R.id.addsticker);
         contentLayout = findViewById(R.id.cotentlayout);
-        save = findViewById(R.id.save);
         context = this;
 
         Date.setOnClickListener(new View.OnClickListener() {
@@ -129,6 +136,7 @@ public class CRUDnoteView extends AppCompatActivity {
                 break;
             case VIEW_NOTE_MODE:
                 note = getIntent().getParcelableExtra(MyNotesViewModel.VIEW_NOTE);
+                makeContentLayoutReadOnly();
                 break;
             default:
                 finish();
@@ -161,12 +169,7 @@ public class CRUDnoteView extends AppCompatActivity {
                 launchImageSelector(IMAGE_REQ_CODE);
             }
         });
-        save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                executeSave();
-            }
-        });
+
 
         mViewModel.setViewContainer(new JsonViewModem.ViewContainer<TextImageLayout>() {
             @Override
@@ -205,13 +208,15 @@ public class CRUDnoteView extends AppCompatActivity {
                 }
                 try {
                     mViewModel.loadImageOnScrollView(imgname);
+                    registerImagesforContextMenu();
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
             }
         }
     }
-    private void replaceImage(Uri imageURI,@NonNull ImageViewWithSrc imageview) {
+
+    private void replaceImage(Uri imageURI, @NonNull ImageViewWithSrc imageview) {
         Bitmap image = null;
         if (imageURI != null) {
             try {
@@ -230,7 +235,7 @@ public class CRUDnoteView extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 try {
-                    mViewModel.replaceImageOnScrollView(imgname,imageview);
+                    mViewModel.replaceImageOnScrollView(imgname, imageview);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -245,10 +250,9 @@ public class CRUDnoteView extends AppCompatActivity {
             if (data != null) {
                 loadImage(data.getData());
             }
-        }
-        else if (requestCode == IMAGE_REPLACE_REQ_CODE && resultCode == RESULT_OK) {
+        } else if (requestCode == IMAGE_REPLACE_REQ_CODE && resultCode == RESULT_OK) {
             if (data != null) {
-                if(selectedImageView!=null) {
+                if (selectedImageView != null) {
                     replaceImage(data.getData(), selectedImageView);
                 }
             }
@@ -263,18 +267,10 @@ public class CRUDnoteView extends AppCompatActivity {
             case CREATE_NOTE_MODE:
                 menuInflater.inflate(R.menu.crud_menu_create_note, menu);
                 savebtn = menu.findItem(R.id.save_op_btn);
-                deletebtn = menu.findItem(R.id.delete_op_btn);
                 savebtn.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
                         executeSave();
-                        return true;
-                    }
-                });
-                deletebtn.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem menuItem) {
-                        executeDelete();
                         return true;
                     }
                 });
@@ -337,12 +333,18 @@ public class CRUDnoteView extends AppCompatActivity {
     }
 
     private void makeContentLayoutEditable() {
+        Title.setEnabled(true);
+        editMode = true;
         for (int i = 0; i < contentLayout.getChildCount(); i++) {
             if (contentLayout.getChildAt(i) instanceof EditText) {
                 EditText content = (EditText) contentLayout.getChildAt(i);
+                content.setHint(R.string.New_note_content_hint);
                 content.setEnabled(true);
             } else if (contentLayout.getChildAt(i) instanceof ImageViewWithSrc) {
                 registerForContextMenu(contentLayout.getChildAt(i));
+                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc)contentLayout.getChildAt(i);
+                imageViewWithSrc.setEnabled(true);
+                imageViewWithSrc.setClickable(true);
 
             }
         }
@@ -350,17 +352,35 @@ public class CRUDnoteView extends AppCompatActivity {
 
     private void makeContentLayoutReadOnly() {
 
+        Title.setEnabled(false);
+        editMode = false;
         for (int i = 0; i < contentLayout.getChildCount(); i++) {
             if (contentLayout.getChildAt(i) instanceof EditText) {
                 EditText content = (EditText) contentLayout.getChildAt(i);
+                content.setHint("");
                 content.setEnabled(false);
             } else if (contentLayout.getChildAt(i) instanceof ImageViewWithSrc) {
                 unregisterForContextMenu(contentLayout.getChildAt(i));
+                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc)contentLayout.getChildAt(i);
+                imageViewWithSrc.setClickable(false);
+                imageViewWithSrc.setEnabled(false);
             }
         }
     }
 
-    private void launchImageSelector(int requestCode){
+    private void registerImagesforContextMenu(){
+        for (int i = 0; i < contentLayout.getChildCount(); i++) {
+             if (contentLayout.getChildAt(i) instanceof ImageViewWithSrc) {
+                registerForContextMenu(contentLayout.getChildAt(i));
+                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc)contentLayout.getChildAt(i);
+                imageViewWithSrc.setEnabled(true);
+                imageViewWithSrc.setClickable(true);
+
+            }
+        }
+    }
+
+    private void launchImageSelector(int requestCode) {
         Intent imageselector = new Intent();
         imageselector.setAction(Intent.ACTION_GET_CONTENT);
         imageselector.setType("image/*");
@@ -388,7 +408,7 @@ public class CRUDnoteView extends AppCompatActivity {
         menu.findItem(R.id.replace_im).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem menuItem) {
-                if(v instanceof ImageViewWithSrc) {
+                if (v instanceof ImageViewWithSrc) {
                     selectedImageView = (ImageViewWithSrc) v;
                 }
                 launchImageSelector(IMAGE_REPLACE_REQ_CODE);
@@ -408,22 +428,43 @@ public class CRUDnoteView extends AppCompatActivity {
     //Dialog delivery Class               //
     ///////////////////////////////////////
 
-    private class Dialogs{
+    private class Dialogs {
         private AlertDialog dialog;
         private Context context;
+
         public Dialogs(Context context) {
             this.context = context;
         }
-        public AlertDialog getDeleteConfirmDialog(){
+
+        public AlertDialog getDeleteConfirmDialog() {
             dialog = new AlertDialog.Builder(context).setTitle(R.string.delete_confirm_title).
                     setMessage(R.string.delete_confirm_description).setPositiveButton(R.string.btn_yes,
                     new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    executeDelete();
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            executeDelete();
 
-                }
-            }).setNegativeButton(R.string.btn_no,null
+                        }
+                    }).setNegativeButton(R.string.btn_no, null
+            ).create();
+            return dialog;
+        }
+        public AlertDialog getSaveConfirmDialog() {
+            dialog = new AlertDialog.Builder(context).setTitle(R.string.save_confirm_title).
+                    setMessage(R.string.save_confirm_description).setPositiveButton(R.string.btn_yes,
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            executeSave();
+                            finish();
+
+                        }
+                    }).setNegativeButton(R.string.btn_no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                        }
+                    }
             ).create();
             return dialog;
         }
@@ -433,4 +474,35 @@ public class CRUDnoteView extends AppCompatActivity {
     //Dialog delivery Class               //
     ///////////////////////////////////////
 
+    private void modifyCollapsingToolbarTitle(final CollapsingToolbarLayout collapsingToolbarLayout
+            , AppBarLayout appBarLayout, final String title) {
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            boolean isShow = true;
+            int scrollRange = -1;
+
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                if (scrollRange == -1) {
+                    scrollRange = appBarLayout.getTotalScrollRange();
+                }
+                if (scrollRange + verticalOffset == 0) {
+                    collapsingToolbarLayout.setTitle(title);
+                    isShow = true;
+                } else if (isShow) {
+                    collapsingToolbarLayout.setTitle(" ");//careful there should a space between double quote otherwise it wont work
+                    isShow = false;
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(editMode)
+            new Dialogs(context).getSaveConfirmDialog().show();
+        else{
+            super.onBackPressed();
+        }
+
+    }
 }

@@ -100,7 +100,8 @@ public class CRUDnoteViewModel extends AndroidViewModel {
         TextImageLayout contentLayout = viewContainer.getViewContainer();
         ImageViewWithSrc imageview = new ImageViewWithSrc(mApplication.getApplicationContext(), imageSaver);
         imageview.setmImageURI(URI);
-        imageview.setBackgroundColor(Color.BLUE);
+        imageview.setBackgroundResource(R.drawable.content_image_background);
+        //imageview.setClickable(true);
         contentLayout.addView(imageview);
         EditText editText = new EditText(new ContextThemeWrapper(mApplication.getApplicationContext(),
                 R.style.content_new_note_style));

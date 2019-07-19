@@ -18,8 +18,11 @@ import com.rove.notestick.R;
 
 import java.io.FileNotFoundException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 public class StringImageJsonViewModem implements JsonViewModem {
     private Context context;
@@ -39,6 +42,7 @@ public class StringImageJsonViewModem implements JsonViewModem {
     @Override
     public String getJsonfromView() {
         TextImageLayout textImageLayout = viewContainer.getViewContainer();
+        mergeConsecutiveTextViews(textImageLayout);
         int viewcount = textImageLayout.getChildCount();
         JsonArray jsonArray = new JsonArray();
         ContentView contentView;
@@ -82,7 +86,9 @@ public class StringImageJsonViewModem implements JsonViewModem {
                             , ViewGroup.LayoutParams.WRAP_CONTENT);
                     editText.setLayoutParams(params);
                     editText.setText(contentView.content);
+                    editText.setHint("");
                     editText.setEnabled(false);
+                    editText.setBackgroundResource(android.R.color.transparent);
                     textImageLayout.addView(editText);
                     break;
                 case IMAGEVIEW_TYPE:
@@ -96,10 +102,11 @@ public class StringImageJsonViewModem implements JsonViewModem {
                                 , contentView.getViewSize().Height);
                     }
                     imageview.setLayoutParams(params);
-                    //imageSaver.setFileName(contentView.getContent());
                     imageview.setmImageURI(contentView.getContent());
                     Bitmap image = imageSaver.load();
                     imageview.setImageBitmap(image);
+                    //imageview.setClickable(true);
+                    imageview.setBackgroundResource(R.drawable.content_image_background);
                     textImageLayout.addView(imageview);
                     break;
                 default:
@@ -149,6 +156,31 @@ public class StringImageJsonViewModem implements JsonViewModem {
         public ViewSize(int width, int height) {
             Width = width;
             Height = height;
+        }
+    }
+    private void mergeConsecutiveTextViews(@NonNull TextImageLayout textImageLayout){
+        int viewcount = textImageLayout.getChildCount();
+        boolean isFoundConsecutive = true;
+        while(isFoundConsecutive) {
+            boolean isConsecutive = false;
+            for (int i = 0; i < viewcount; i++) {
+                if (textImageLayout.getChildAt(i) instanceof EditText) {
+                    if (isConsecutive) {
+                        EditText prev = (EditText) textImageLayout.getChildAt(i - 1);
+                        EditText now = (EditText) textImageLayout.getChildAt(i);
+                        prev.append(now.getText().toString());
+                        textImageLayout.removeView(now);
+                        break;
+                    }
+                    isConsecutive = true;
+                } else {
+                    isConsecutive = false;
+                }
+                if(i==viewcount-1){
+                    isFoundConsecutive = false;
+                }
+            }
+
         }
     }
 

@@ -45,7 +45,6 @@
         <item name="android:hint">@string/New_note_content_hint</item>
         <item name="android:background">@android:color/transparent</item>
         <item name="android:textSize">18sp</item>
-
     </style>
 
     <style name="month_style" parent="AppTheme">
@@ -77,6 +76,10 @@
     <style name="date_style" parent="AppTheme">
         <item name="android:textSize">17sp</item>
         <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+    <style name="CollapsingToolbarLayoutExpandedTextStyle" parent="AppTheme">
+        <item name="android:textColor">@android:color/transparent</item>
+        <item name="android:textSize">0sp</item>
     </style>
 
 

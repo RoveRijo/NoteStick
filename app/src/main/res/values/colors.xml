@@ -6,4 +6,7 @@
     <color name="DarkText">#292929</color>
     <color name="FadeText">#727272</color>
     <color name="contentColor">#606060</color>
+    <color name="white">#FFFFFF</color>
+    <color name="Transparent">#00000000</color>
+    <color name="Blue">#0000ff</color>
 </resources>
