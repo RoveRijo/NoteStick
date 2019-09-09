@@ -6,11 +6,15 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,6 +22,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.opengl.Visibility;
 import android.os.Bundle;
+import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -28,15 +33,19 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.leinardi.android.speeddial.SpeedDialActionItem;
+import com.leinardi.android.speeddial.SpeedDialView;
 import com.rove.datalayer.Data.Entity_Note;
 import com.rove.notestick.CustomViews.ImageViewWithSrc;
 import com.rove.notestick.CustomViews.TextImageLayout;
@@ -47,6 +56,8 @@ import com.rove.notestick.Util.JsonViewModem;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -55,14 +66,18 @@ public class CRUDnoteView extends AppCompatActivity {
 
     private CRUDnoteViewModel mViewModel;
     private TextView Date, Day, Month, Year, Time;
+    private LifecycleOwner lifecycleOwner;
     private EditText Title;
     private TextImageLayout contentLayout;
     private boolean editMode = false;
     private Entity_Note note;
-    private FloatingActionButton addStickerbtn;
+    private SpeedDialView addStickermenu;
+    private ConstraintLayout datelayout;
     private CoordinatorLayout rootLayout;
     private static final int IMAGE_REQ_CODE = 1;
     private static final int IMAGE_REPLACE_REQ_CODE = 3;
+    private static final int REQUEST_IMAGE_CAPTURE = 4;
+    private static final int REQUEST_IMAGE_CAPTURE_REPLACE = 5;
     public static final int CREATE_NOTE_MODE = 1;
     public static final int VIEW_NOTE_MODE = 2;
     public static final String MODE = "mode";
@@ -83,7 +98,7 @@ public class CRUDnoteView extends AppCompatActivity {
         AppBarLayout appBarLayout = findViewById(R.id.appbar);
         CollapsingToolbarLayout collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
 
-        modifyCollapsingToolbarTitle(collapsingToolbarLayout,appBarLayout, (String) getTitle());
+        modifyCollapsingToolbarTitle(collapsingToolbarLayout, appBarLayout, (String) getTitle());
 
         Date = findViewById(R.id.date);
         Day = findViewById(R.id.day);
@@ -91,38 +106,46 @@ public class CRUDnoteView extends AppCompatActivity {
         Time = findViewById(R.id.time);
         Month = findViewById(R.id.month);
         Title = findViewById(R.id.title);
-        addStickerbtn = findViewById(R.id.addsticker);
+        datelayout = findViewById(R.id.noteheader);
+        addStickermenu = findViewById(R.id.addsticker);
+
         contentLayout = findViewById(R.id.cotentlayout);
         context = this;
 
         Date.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                new Dialogs(context).getDatepicker().show();
             }
         });
         Day.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                new Dialogs(context).getDatepicker().show();
             }
         });
         Year.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                new Dialogs(context).getDatepicker().show();
             }
         });
         Time.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                new Dialogs(context).getTimepicker().show();
             }
         });
         Month.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                new Dialogs(context).getDatepicker().show();
+            }
+        });
+        datelayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new Dialogs(context).getDatepicker().show();
             }
         });
 
@@ -133,6 +156,8 @@ public class CRUDnoteView extends AppCompatActivity {
         switch (openMode) {
             case CREATE_NOTE_MODE:
                 note = getIntent().getParcelableExtra(MyNotesViewModel.NEW_NOTE);
+                makeContentLayoutEditable();
+
                 break;
             case VIEW_NOTE_MODE:
                 note = getIntent().getParcelableExtra(MyNotesViewModel.VIEW_NOTE);
@@ -142,6 +167,7 @@ public class CRUDnoteView extends AppCompatActivity {
                 finish();
                 break;
         }
+        lifecycleOwner = this;
 
         mViewModel.setCurrentNote(new MutableLiveData<>(note));
         mViewModel.getCurrentNote().observe(this, new Observer<Entity_Note>() {
@@ -163,13 +189,24 @@ public class CRUDnoteView extends AppCompatActivity {
 
             }
         });
-        addStickerbtn.setOnClickListener(new View.OnClickListener() {
+
+        addStickermenu.inflate(R.menu.crud_menu_sticker_options);
+        addStickermenu.setOnActionSelectedListener(new SpeedDialView.OnActionSelectedListener() {
             @Override
-            public void onClick(View view) {
-                launchImageSelector(IMAGE_REQ_CODE);
+            public boolean onActionSelected(SpeedDialActionItem actionItem) {
+                switch (actionItem.getId()) {
+                    case R.id.from_camera:
+                        getImageFromCamera(REQUEST_IMAGE_CAPTURE);
+                        return false;
+                    case R.id.from_gallery:
+                        launchImageSelector(IMAGE_REQ_CODE);
+                        return false;
+                    default:
+                        return true;
+                }
+
             }
         });
-
 
         mViewModel.setViewContainer(new JsonViewModem.ViewContainer<TextImageLayout>() {
             @Override
@@ -216,6 +253,25 @@ public class CRUDnoteView extends AppCompatActivity {
         }
     }
 
+    private void loadImagefromCamera(Bitmap image) {
+        Random random = new Random();
+        int number = random.nextInt(10000);
+        java.util.Date date = new Date();
+        String imgname = String.valueOf(date) + String.valueOf(number);
+        try {
+            mViewModel.saveImagetoPrivatefile(imgname, image);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            mViewModel.loadImageOnScrollView(imgname);
+            registerImagesforContextMenu();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private void replaceImage(Uri imageURI, @NonNull ImageViewWithSrc imageview) {
         Bitmap image = null;
         if (imageURI != null) {
@@ -243,6 +299,24 @@ public class CRUDnoteView extends AppCompatActivity {
         }
     }
 
+    private void replaceImageWithCamera(Bitmap image, @NonNull ImageViewWithSrc imageview) {
+        Random random = new Random();
+        int number = random.nextInt(10000);
+        java.util.Date date = new Date();
+        String imgname = String.valueOf(date) + String.valueOf(number);
+        try {
+            mViewModel.saveImagetoPrivatefile(imgname, image);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            mViewModel.replaceImageOnScrollView(imgname, imageview);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -254,6 +328,20 @@ public class CRUDnoteView extends AppCompatActivity {
             if (data != null) {
                 if (selectedImageView != null) {
                     replaceImage(data.getData(), selectedImageView);
+                }
+            }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            if (data != null) {
+                Bundle extras = data.getExtras();
+                Bitmap image = (Bitmap) extras.get("data");
+                loadImagefromCamera(image);
+            }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE_REPLACE && resultCode == RESULT_OK) {
+            if (data != null) {
+                if (selectedImageView != null) {
+                    Bundle extras = data.getExtras();
+                    Bitmap image = (Bitmap) extras.get("data");
+                    replaceImageWithCamera(image, selectedImageView);
                 }
             }
         }
@@ -270,7 +358,11 @@ public class CRUDnoteView extends AppCompatActivity {
                 savebtn.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
-                        executeSave();
+                        try {
+                            executeSave();
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                         return true;
                     }
                 });
@@ -284,7 +376,11 @@ public class CRUDnoteView extends AppCompatActivity {
                 savebtn.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
-                        executeSave();
+                        try {
+                            executeSave();
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                         editbtn.setVisible(true);
                         makeContentLayoutReadOnly();
                         return true;
@@ -311,10 +407,22 @@ public class CRUDnoteView extends AppCompatActivity {
         return true;
     }
 
-    private void executeSave() {
+    private void executeSave() throws ParseException {
         note.setTitle(Title.getText().toString());
+        Date date = new DateParser.StringToDateTimeBuilder(Day.getText().toString()+", "+
+                Month.getText().toString()+" "+Date.getText().toString()
+                +" "+Year.getText().toString()+" "+Time.getText().toString())
+                .build();
+        if(date!=null){
+            note.setDate(date);
+        }
         try {
-            mViewModel.saveCurrentNote(note);
+            mViewModel.saveCurrentNote(note).observe(lifecycleOwner, new Observer<Long>() {
+                @Override
+                public void onChanged(Long noteid) {
+                    note.NoteId = (int) (long) noteid;
+                }
+            });
             Snackbar.make(rootLayout, R.string.Save_snackbar_msg, Snackbar.LENGTH_SHORT).show();
         } catch (ExecutionException e) {
             e.printStackTrace();
@@ -335,6 +443,20 @@ public class CRUDnoteView extends AppCompatActivity {
     private void makeContentLayoutEditable() {
         Title.setEnabled(true);
         editMode = true;
+        addStickermenu.setVisibility(View.VISIBLE);
+        datelayout.setBackgroundResource(R.drawable.date_selection_background);
+        Date.setBackgroundResource(R.drawable.date_selection_background);
+        Day.setBackgroundResource(R.drawable.date_selection_background);
+        Year.setBackgroundResource(R.drawable.date_selection_background);
+        Month.setBackgroundResource(R.drawable.date_selection_background);
+        Time.setBackgroundResource(R.drawable.date_selection_background);
+        Date.setClickable(true);
+        Day.setClickable(true);
+        Month.setClickable(true);
+        Year.setClickable(true);
+        Time.setClickable(true);
+        datelayout.setClickable(true);
+
         for (int i = 0; i < contentLayout.getChildCount(); i++) {
             if (contentLayout.getChildAt(i) instanceof EditText) {
                 EditText content = (EditText) contentLayout.getChildAt(i);
@@ -342,7 +464,7 @@ public class CRUDnoteView extends AppCompatActivity {
                 content.setEnabled(true);
             } else if (contentLayout.getChildAt(i) instanceof ImageViewWithSrc) {
                 registerForContextMenu(contentLayout.getChildAt(i));
-                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc)contentLayout.getChildAt(i);
+                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc) contentLayout.getChildAt(i);
                 imageViewWithSrc.setEnabled(true);
                 imageViewWithSrc.setClickable(true);
 
@@ -354,6 +476,13 @@ public class CRUDnoteView extends AppCompatActivity {
 
         Title.setEnabled(false);
         editMode = false;
+        addStickermenu.setVisibility(View.GONE);
+        Date.setClickable(false);
+        Day.setClickable(false);
+        Month.setClickable(false);
+        Year.setClickable(false);
+        Time.setClickable(false);
+        datelayout.setClickable(false);
         for (int i = 0; i < contentLayout.getChildCount(); i++) {
             if (contentLayout.getChildAt(i) instanceof EditText) {
                 EditText content = (EditText) contentLayout.getChildAt(i);
@@ -361,18 +490,18 @@ public class CRUDnoteView extends AppCompatActivity {
                 content.setEnabled(false);
             } else if (contentLayout.getChildAt(i) instanceof ImageViewWithSrc) {
                 unregisterForContextMenu(contentLayout.getChildAt(i));
-                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc)contentLayout.getChildAt(i);
+                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc) contentLayout.getChildAt(i);
                 imageViewWithSrc.setClickable(false);
                 imageViewWithSrc.setEnabled(false);
             }
         }
     }
 
-    private void registerImagesforContextMenu(){
+    private void registerImagesforContextMenu() {
         for (int i = 0; i < contentLayout.getChildCount(); i++) {
-             if (contentLayout.getChildAt(i) instanceof ImageViewWithSrc) {
+            if (contentLayout.getChildAt(i) instanceof ImageViewWithSrc) {
                 registerForContextMenu(contentLayout.getChildAt(i));
-                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc)contentLayout.getChildAt(i);
+                ImageViewWithSrc imageViewWithSrc = (ImageViewWithSrc) contentLayout.getChildAt(i);
                 imageViewWithSrc.setEnabled(true);
                 imageViewWithSrc.setClickable(true);
 
@@ -385,6 +514,13 @@ public class CRUDnoteView extends AppCompatActivity {
         imageselector.setAction(Intent.ACTION_GET_CONTENT);
         imageselector.setType("image/*");
         startActivityForResult(imageselector, requestCode);
+    }
+
+    private void getImageFromCamera(int requestCode) {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, requestCode);
+        }
     }
 
     /*
@@ -405,13 +541,23 @@ public class CRUDnoteView extends AppCompatActivity {
                 return true;
             }
         });
-        menu.findItem(R.id.replace_im).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        menu.findItem(R.id.replace_im_gallery).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem menuItem) {
                 if (v instanceof ImageViewWithSrc) {
                     selectedImageView = (ImageViewWithSrc) v;
                 }
                 launchImageSelector(IMAGE_REPLACE_REQ_CODE);
+                return true;
+            }
+        });
+        menu.findItem(R.id.replace_im_camera).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                if (v instanceof ImageViewWithSrc) {
+                    selectedImageView = (ImageViewWithSrc) v;
+                }
+                getImageFromCamera(REQUEST_IMAGE_CAPTURE_REPLACE);
                 return true;
             }
         });
@@ -430,6 +576,8 @@ public class CRUDnoteView extends AppCompatActivity {
 
     private class Dialogs {
         private AlertDialog dialog;
+        private DatePickerDialog datePickerDialog;
+        private TimePickerDialog timePickerDialog;
         private Context context;
 
         public Dialogs(Context context) {
@@ -449,13 +597,18 @@ public class CRUDnoteView extends AppCompatActivity {
             ).create();
             return dialog;
         }
+
         public AlertDialog getSaveConfirmDialog() {
             dialog = new AlertDialog.Builder(context).setTitle(R.string.save_confirm_title).
                     setMessage(R.string.save_confirm_description).setPositiveButton(R.string.btn_yes,
                     new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            executeSave();
+                            try {
+                                executeSave();
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
                             finish();
 
                         }
@@ -467,6 +620,38 @@ public class CRUDnoteView extends AppCompatActivity {
                     }
             ).create();
             return dialog;
+        }
+
+        public DatePickerDialog getDatepicker() {
+            final Calendar today = Calendar.getInstance();
+            datePickerDialog = new DatePickerDialog(context, new DatePickerDialog.OnDateSetListener() {
+                @Override
+                public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
+                    today.set(i, i1, i2);
+                    Date date = today.getTime();
+                    DateParser dateParser = new DateParser(date);
+                    Date.setText(dateParser.getDate());
+                    Day.setText(dateParser.getDay());
+                    Year.setText(dateParser.getYear());
+                    Month.setText(dateParser.getMonth());
+                }
+            }, today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+            return datePickerDialog;
+        }
+
+        public TimePickerDialog getTimepicker() {
+            final Calendar today = Calendar.getInstance();
+            timePickerDialog = new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
+                @Override
+                public void onTimeSet(TimePicker timePicker, int i, int i1) {
+                    today.set(0, 0, 0, i, i1);
+                    Date date = today.getTime();
+                    DateParser dateParser = new DateParser(date);
+                    Time.setText(dateParser.getTime());
+                }
+            }, today.get(Calendar.HOUR_OF_DAY), today.get(Calendar.MINUTE), false);
+
+            return timePickerDialog;
         }
     }
 
@@ -489,7 +674,7 @@ public class CRUDnoteView extends AppCompatActivity {
                     collapsingToolbarLayout.setTitle(title);
                     isShow = true;
                 } else if (isShow) {
-                    collapsingToolbarLayout.setTitle(" ");//careful there should a space between double quote otherwise it wont work
+                    collapsingToolbarLayout.setTitle(" ");
                     isShow = false;
                 }
             }
@@ -498,9 +683,9 @@ public class CRUDnoteView extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(editMode)
+        if (editMode)
             new Dialogs(context).getSaveConfirmDialog().show();
-        else{
+        else {
             super.onBackPressed();
         }
 

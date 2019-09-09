@@ -7,9 +7,15 @@
 
     </item>
     <item
-        android:id="@+id/replace_im"
-        android:title="@string/change_image_title"
+        android:id="@+id/replace_im_gallery"
+        android:title="@string/change_image_title_gallery"
         android:icon="@drawable/change_image_icon">
+
+    </item>
+    <item
+        android:id="@+id/replace_im_camera"
+        android:title="@string/change_image_title_camera"
+        android:icon="@android:drawable/ic_menu_camera">
 
     </item>
 

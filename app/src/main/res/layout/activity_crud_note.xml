@@ -157,13 +157,14 @@
     </androidx.core.widget.NestedScrollView>
 
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.leinardi.android.speeddial.SpeedDialView
         android:id="@+id/addsticker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@drawable/fab_attach_image" />
+        app:sdMainFabClosedSrc="@drawable/fab_attach"
+        app:layout_behavior="@string/speeddial_scrolling_view_snackbar_behavior"/>
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

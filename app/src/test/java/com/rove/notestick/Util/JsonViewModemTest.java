@@ -66,8 +66,6 @@ public class JsonViewModemTest {
        // String JsonArray = stringImageJsonViewModem.getJsonfromView();
         //System.out.println(JsonArray);
         assert(true);
-
-
     }
 
 

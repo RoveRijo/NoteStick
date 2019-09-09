@@ -1,4 +1,4 @@
-package com.rove.domainlayer;
+package com.rove.domainlayer.Repository;
 
 
 import android.app.Application;
@@ -8,13 +8,18 @@ import android.provider.ContactsContract;
 import com.rove.datalayer.Data.*;
 import com.rove.datalayer.Data.Entity_Note;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.room.Room;
 
 import com.rove.datalayer.Data.DatabaseInteractor;
+import com.rove.domainlayer.Util.DateManipulator;
 
 import static com.rove.datalayer.Data.DatabaseInteractor.getDatabaseInstance;
 
@@ -22,20 +27,48 @@ import static com.rove.datalayer.Data.DatabaseInteractor.getDatabaseInstance;
 
 public class NoteRepository {
     private DatabaseInteractor databaseInteractor;
+    private static MutableLiveData<Long> inserted_noteID = new MutableLiveData<>();
+    private MediatorLiveData<List<Entity_Note>> notesByDateAndQuery = new MediatorLiveData<>();
+
 
     public NoteRepository(Application application) {
         databaseInteractor = getDatabaseInstance(application);
 
     }
 
+    public MediatorLiveData<List<Entity_Note>> getNotesByDateAndQuery() {
+        return notesByDateAndQuery;
+    }
 
     public LiveData<List<Entity_Note>> getAllNotesOrderBydate() {
         return databaseInteractor.getDao().getAllNotesOrderByDate();
     }
+//    public LiveData<List<Entity_Note>> getAllNotesOrderBydate_andQuery(String query) {
+//
+//        if(query.equals("")) {
+//             mergedListLiveData.addSource(databaseInteractor.getDao().getAllNotesOrderByDate(),
+//                     NotesBydate-> mergedListLiveData.setValue(NotesBydate));
+//        }
+//        else
+//        {
+//            mergedListLiveData.addSource(databaseInteractor.getDao().getAllNotesOrderByQuery("%"+query+"%"),
+//                    NotesByQuery->mergedListLiveData.setValue(NotesByQuery));
+//        }
+//        return mergedListLiveData;
+//    }
 
+    public void getAllNotesOrderBydate_andQuery(String query){
+        notesByDateAndQuery.addSource(databaseInteractor.getDao().getAllNotesOrderByQuery("%"+query+"%"),
+                NotesBydate-> notesByDateAndQuery.setValue(NotesBydate));
+    }
+    public void getAllNotesOrderBydate_andQuery(){
+        notesByDateAndQuery.addSource(databaseInteractor.getDao().getAllNotesOrderByDate(),
+                     NotesBydate-> notesByDateAndQuery.setValue(NotesBydate));
+    }
 
-    public void saveNote(Entity_Note note) {
+    public MutableLiveData<Long> saveNote(Entity_Note note) {
         new Task_SaveNote(databaseInteractor).execute(note);
+        return inserted_noteID;
 
     }
 
@@ -60,6 +93,14 @@ public class NoteRepository {
     public void deleteNote(Entity_Note note){
       new Task_deleteNote(databaseInteractor).execute(note);
     }
+    public LiveData<List<Date>> getAllDateswithNotes(){
+        return databaseInteractor.getDao().getAllDatesWithNotes();
+    }
+    public LiveData<List<Entity_Note>> getAllNoteswithDate(Date date){
+        return databaseInteractor.getDao().getNotesFromPeriod(date, DateManipulator.getNextDay(date));
+    }
+
+
 
 
 
@@ -72,7 +113,8 @@ public class NoteRepository {
 
         @Override
         protected Void doInBackground(Entity_Note... entity_notes) {
-            databaseInteractor.getDao().insertNote(entity_notes[0]);
+            long noteId = databaseInteractor.getDao().insertNote(entity_notes[0]);
+            inserted_noteID.postValue(noteId);
             return null;
         }
     }
@@ -87,6 +129,7 @@ public class NoteRepository {
         @Override
         protected Void doInBackground(Entity_Note... entity_notes) {
             databaseInteractor.getDao().updateNote(entity_notes[0]);
+
             return null;
         }
     }

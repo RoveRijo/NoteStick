@@ -15,7 +15,7 @@ import androidx.room.Update;
 @Dao
 public interface mDao {
     @Insert
-    void insertNote(Entity_Note note);
+    long insertNote(Entity_Note note);
 
     @Update
     void updateNote(Entity_Note notes);
@@ -29,9 +29,11 @@ public interface mDao {
     @Query("SELECT * fROM Entity_Note ORDER BY Date DESC")
     LiveData<List<Entity_Note>> getAllNotesOrderByDate();
 
+    @Query("SELECT * fROM Entity_Note WHERE Title LIKE :query ")
+    LiveData<List<Entity_Note>> getAllNotesOrderByQuery(String query);
+
 //    @Query("SELECT * fROM Entity_Note")
 //    Cursor getAllNotesAsCursor();
-
 
 
     @Query("SELECT * fROM Entity_Note WHERE NoteId = :id")
@@ -40,17 +42,20 @@ public interface mDao {
     @Query("SELECT * fROM Entity_Note WHERE NoteId = :id")
     LiveData<Entity_Note> getNoteByIDLiveData(int id);
 
-    @Query("SELECT * fROM Entity_Note WHERE Date = :date")
-    LiveData<List<Entity_Note>> getNoteByDate(Date date);
-
-    @Query("SELECT * fROM Entity_Note WHERE Date >= :fromdate AND Date <= :todate ")
-    LiveData<List<Entity_Note>> getNotesFromPeriod(Date fromdate,Date todate);
+    @Query("SELECT * fROM Entity_Note WHERE Date >= :fromdate AND Date < :todate ")
+    LiveData<List<Entity_Note>> getNotesFromPeriod(Date fromdate, Date todate);
 
     @Query("SELECT * fROM Entity_Note WHERE instr(Title,:querystr)")
     LiveData<List<Entity_Note>> getNotesContainsTitle(String querystr);
 
     @Query("SELECT * fROM Entity_Note WHERE instr(Content,:querystr)")
     LiveData<List<Entity_Note>> getNotesContainsContent(String querystr);
+
+    @Query("SELECT DISTINCT Date FROM Entity_Note")
+    LiveData<List<Date>> getAllDatesWithNotes();
+
+    @Query("SELECT NoteId FROM Entity_Note WHERE Date = :date ")
+    LiveData<List<Entity_Note>> getAllNotesWithDate(Date date);
 
 
 }

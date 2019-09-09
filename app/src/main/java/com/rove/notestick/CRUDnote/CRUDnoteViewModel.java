@@ -6,7 +6,7 @@ import android.graphics.Color;
 import android.widget.EditText;
 
 import com.rove.datalayer.Data.Entity_Note;
-import com.rove.domainlayer.NoteRepository;
+import com.rove.domainlayer.Repository.NoteRepository;
 import com.rove.notestick.CustomViews.ImageViewWithSrc;
 import com.rove.notestick.CustomViews.TextImageLayout;
 import com.rove.notestick.R;
@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 public class CRUDnoteViewModel extends AndroidViewModel {
 
@@ -33,10 +34,6 @@ public class CRUDnoteViewModel extends AndroidViewModel {
     private LiveData<Entity_Note> currentNote;
     private ImageSaver imageSaver;
     private Application mApplication;
-    //private boolean save_state = true;
-
-    //private StringImageLayout contentLayout;
-
     private JsonViewModem.ViewContainer<TextImageLayout> viewContainer;
 
 
@@ -50,7 +47,8 @@ public class CRUDnoteViewModel extends AndroidViewModel {
         jsonViewModem = new StringImageJsonViewModem(application.getApplicationContext(), imageSaver);
     }
 
-    public void saveCurrentNote(Entity_Note note) throws ExecutionException, InterruptedException {
+    public MutableLiveData<Long> saveCurrentNote(Entity_Note note) throws ExecutionException, InterruptedException {
+        MutableLiveData<Long> retValue = new MutableLiveData<>();
         if (viewContainer == null)
             throw new RuntimeException("Set viewContainer first, before calling saveCurren" +
                     "tNote()");
@@ -79,10 +77,11 @@ public class CRUDnoteViewModel extends AndroidViewModel {
 
                 noteRepository.editNote(note);
             } else {
-                noteRepository.saveNote(note);
+                retValue = noteRepository.saveNote(note);
             }
             currentNote = noteRepository.getNoteByIDLiveData(note.NoteId);
         }
+        return retValue;
     }
 
     public LiveData<Entity_Note> getCurrentNote() {
@@ -101,18 +100,15 @@ public class CRUDnoteViewModel extends AndroidViewModel {
         ImageViewWithSrc imageview = new ImageViewWithSrc(mApplication.getApplicationContext(), imageSaver);
         imageview.setmImageURI(URI);
         imageview.setBackgroundResource(R.drawable.content_image_background);
-        //imageview.setClickable(true);
         contentLayout.addView(imageview);
         EditText editText = new EditText(new ContextThemeWrapper(mApplication.getApplicationContext(),
                 R.style.content_new_note_style));
         editText.setBackgroundColor(Color.TRANSPARENT);
-//        editText.setHint(R.string.New_note_content_hint);
-//        editText.setTextColor(Color.BLACK);
         contentLayout.addView(editText);
     }
-    public void replaceImageOnScrollView(String URI,ImageViewWithSrc imageview) throws FileNotFoundException {
+
+    public void replaceImageOnScrollView(String URI, ImageViewWithSrc imageview) throws FileNotFoundException {
         imageview.setmImageURI(URI);
-        imageview.setBackgroundColor(Color.BLUE);
     }
 
     public Application getApplication() {
@@ -127,21 +123,15 @@ public class CRUDnoteViewModel extends AndroidViewModel {
         this.viewContainer = viewContainer;
         jsonViewModem.setViewContainer(viewContainer);
     }
+
     public void getContentOf(Entity_Note note) throws FileNotFoundException {
         String content = note.getContent();
-        if(content!=null)
-        jsonViewModem.populateViewfromJson(note.getContent());
+        if (content != null)
+            jsonViewModem.populateViewfromJson(note.getContent());
     }
 
     public void deleteNoteWithId(Entity_Note note) {
         noteRepository.deleteNote(note);
     }
 
-//    public void setSave_state(boolean save_state) {
-//        this.save_state = save_state;
-//    }
-//
-//    public boolean isSaved() {
-//        return save_state;
-//    }
 }
